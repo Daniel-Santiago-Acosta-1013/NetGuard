@@ -1,5 +1,4 @@
 from scapy.all import ARP, Ether, srp
-from scapy.layers.l2 import getmacbyip
 from rich.progress import Progress
 from core.entities import Device
 from core.use_cases import NetworkUseCases
