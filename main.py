@@ -30,6 +30,8 @@ def main():
         elif option == "2":
             # Bloquear dispositivo
             ip = cli.select_device(devices)
+            if ip is None:
+                continue
             device = next((d for d in devices if d.ip == ip), None)
             if device:
                 manager.block_device(device.mac)
@@ -42,6 +44,8 @@ def main():
         elif option == "3":
             # Bajar calidad de conexión (throttle)
             ip = cli.select_device(devices)
+            if ip is None:
+                continue
             device = next((d for d in devices if d.ip == ip), None)
             if device:
                 limit = cli.get_bandwidth_limit()  # Ejemplo: "100kbit"
@@ -64,6 +68,8 @@ def main():
         elif option == "4":
             # Reconectar dispositivo bloqueado (desbloquear)
             ip = cli.select_device(devices)
+            if ip is None:
+                continue
             device = next((d for d in devices if d.ip == ip), None)
             if device:
                 manager.unblock_device(device.mac)

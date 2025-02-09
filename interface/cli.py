@@ -47,7 +47,12 @@ class CLIInterface:
         
     def select_device(self, devices):
         ips = [device.ip for device in devices]
-        return Prompt.ask("Seleccione una IP", choices=ips)
+        # Agregar la opción para volver al menú principal
+        ips.append("volver")
+        selection = Prompt.ask("Seleccione una IP o escriba 'volver' para regresar al menú principal", choices=ips)
+        if selection == "volver":
+            return None
+        return selection
     
     def get_bandwidth_limit(self):
         return Prompt.ask("Ingrese el límite de ancho de banda (ej: 100kbit)")
