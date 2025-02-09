@@ -15,14 +15,14 @@ NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. P
 
 1. **Construir la imagen y ejecutar el contenedor**:
    ```bash
-     docker-compose build
-     docker-compose run netguard
+     docker compose build
+     docker compose run netguard
    ```
 
 2. **Reconstruir después de cambios**:
   Si modificas el código o las dependencias (`requirements.txt`), reconstruye la imagen con:
   ```bash
-    docker-compose build
+    docker compose build
   ```
   
 ---
