@@ -15,28 +15,28 @@ NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. P
 ## Configuración del Entorno Virtual
 
 1. **Crear el entorno virtual**:
-   \\```bash
-   \\python3 -m venv netguard-env
-   \\```
+   ```bash
+   python3 -m venv netguard-env
+   ```
 
 2. **Activar el entorno virtual**:
-   \\```bash
-   \\source netguard-env/bin/activate
-   \\```
+   ```bash
+   source netguard-env/bin/activate
+   ```
 
 3. **Instalar dependencias**:
-   \\```bash
-   \\pip install -r requirements.txt
-   \\```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
 ## Ejecución del Programa
 
 1. **Iniciar NetGuard**:
-   \\```bash
-   \\sudo python main.py
-   \\```
+   ```bash
+   sudo python main.py
+   ```
 
 2. **Interfaz Principal**:
    - Al iniciar, se escaneará automáticamente la red y se mostrará una lista de dispositivos conectados.
