@@ -1,5 +1,5 @@
 import subprocess
-from python_iptables import Iptables
+from infrastructure.iptables_wrapper import Iptables
 
 class DeviceManager:
     def __init__(self):
@@ -14,7 +14,10 @@ class DeviceManager:
         self.iptables.commit()
         
     def throttle_device(self, ip, limit='100kbit'):
-        # Configurar control de ancho de banda con tc
+        # Limpiar configuraciones previas
+        subprocess.run(['tc', 'qdisc', 'del', 'dev', 'wlan0', 'root'], stderr=subprocess.DEVNULL)
+        
+        # Configurar nueva política de ancho de banda
         subprocess.run([
             'tc', 'qdisc', 'add', 'dev', 'wlan0', 'root', 
             'handle', '1:', 'htb', 'default', '12'

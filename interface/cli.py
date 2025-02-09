@@ -1,7 +1,17 @@
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt
-from rich.panel import Panel
+import sys
+
+try:
+    from rich.console import Console  # type: ignore
+    from rich.table import Table  # type: ignore
+    from rich.prompt import Prompt  # type: ignore
+    from rich.panel import Panel  # type: ignore
+except ModuleNotFoundError:
+    sys.stderr.write(
+        "El módulo 'rich' es necesario. Por favor, instale 'rich' ejecutando:\n"
+        "python3 -m pip install rich\n"
+    )
+    sys.exit(1)
+
 from core.entities import Device
 
 class CLIInterface:

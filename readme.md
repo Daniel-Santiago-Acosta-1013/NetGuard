@@ -26,7 +26,7 @@ NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. P
 
 3. **Instalar dependencias**:
    ```bash
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
 ---
@@ -35,7 +35,7 @@ NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. P
 
 1. **Iniciar NetGuard**:
    ```bash
-   sudo python main.py
+   sudo python3 main.py
    ```
 
 2. **Interfaz Principal**:
