@@ -18,7 +18,11 @@ def main():
     
     # Realizar el primer escaneo de la red
     devices = scanner.scan()
-    
+    # Obtener y mostrar el nombre de la red conectada (válido para Linux y macOS)
+    network_name = scanner.get_network_name()
+    cli.show_message(f"Conectado a la red: {network_name}")
+    Prompt.ask("\nPresione Enter para continuar", default="")
+
     while True:
         option = cli.show_main_menu()
         

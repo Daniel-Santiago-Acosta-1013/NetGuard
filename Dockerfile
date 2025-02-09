@@ -1,8 +1,13 @@
 FROM python:3.10-slim
 
 # Actualizamos e instalamos las dependencias del sistema necesarias
-# Se agregan gcc y build-essential para compilar extensiones en python-iptables
-RUN apt-get update && apt-get install -y iptables libnetfilter-queue-dev gcc build-essential
+# Se agregan gcc, build-essential y wireless-tools (para iwgetid)
+RUN apt-get update && apt-get install -y \
+    iptables \
+    libnetfilter-queue-dev \
+    gcc \
+    build-essential \
+    wireless-tools
 
 WORKDIR /app
 

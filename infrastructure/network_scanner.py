@@ -3,25 +3,43 @@ from rich.progress import Progress
 from core.entities import Device
 from core.use_cases import NetworkUseCases
 import netifaces
+import ipaddress
+import platform
+import subprocess
+import os
 
 class NetworkScanner:
     def __init__(self, interface=None):
-        # Si no se especifica interfaz, se detecta la interfaz por defecto a partir de la gateway
         if interface is None:
-            gateways = netifaces.gateways()
-            default_iface = gateways.get('default', {}).get(netifaces.AF_INET, [None, None])[1]
-            if default_iface is None:
-                # Fallback: buscar una interfaz no loopback que tenga dirección IPv4
-                for iface in netifaces.interfaces():
-                    addrs = netifaces.ifaddresses(iface)
-                    if netifaces.AF_INET in addrs:
-                        ip = addrs[netifaces.AF_INET][0]['addr']
-                        if not ip.startswith("127."):
+            # Primero, buscar una interfaz inalámbrica (excluyendo loopback) que tenga dirección IPv4
+            wireless_iface = None
+            for iface in netifaces.interfaces():
+                if iface == "lo":
+                    continue
+                addrs = netifaces.ifaddresses(iface)
+                if netifaces.AF_INET in addrs:
+                    # Si existe el directorio "wireless", se asume que es inalámbrica
+                    if os.path.exists(f"/sys/class/net/{iface}/wireless"):
+                        wireless_iface = iface
+                        break
+            if wireless_iface:
+                interface = wireless_iface
+            else:
+                # Si no se encuentra una interfaz inalámbrica, utilizar la interfaz por defecto a partir de la gateway
+                gateways = netifaces.gateways()
+                default_iface = gateways.get('default', {}).get(netifaces.AF_INET, [None, None])[1]
+                if default_iface is None:
+                    # Fallback: buscar una interfaz no loopback que tenga dirección IPv4
+                    for iface in netifaces.interfaces():
+                        if iface == "lo":
+                            continue
+                        addrs = netifaces.ifaddresses(iface)
+                        if netifaces.AF_INET in addrs:
                             default_iface = iface
                             break
-                if default_iface is None:
-                    default_iface = "eth0"
-            interface = default_iface
+                    if default_iface is None:
+                        default_iface = "eth0"
+                interface = default_iface
         self.interface = interface
         self.devices = []
 
@@ -54,17 +72,47 @@ class NetworkScanner:
         return self.devices
 
     def _get_ip_range(self):
-        gateways = netifaces.gateways()
-        default_gateway = gateways.get('default', {}).get(netifaces.AF_INET)
-        if default_gateway:
-            gw_ip = default_gateway[0]
+        addresses = netifaces.ifaddresses(self.interface).get(netifaces.AF_INET)
+        if addresses:
+            ip = addresses[0]['addr']
+            netmask = addresses[0]['netmask']
+            network = ipaddress.IPv4Interface(f"{ip}/{netmask}").network
+            return str(network)
         else:
-            # Fallback: usar la dirección IP asignada a la interfaz especificada
-            addresses = netifaces.ifaddresses(self.interface)
-            ip_info = addresses.get(netifaces.AF_INET)
-            if ip_info:
-                gw_ip = ip_info[0]['addr']
-            else:
-                raise Exception("No se pudo determinar la IP de la interfaz")
-        subnet = gw_ip.rsplit('.', 1)[0] + '.0/24'
-        return subnet
+            raise Exception("No se pudo determinar la IP de la interfaz")
+
+    def get_network_name(self):
+        """
+        Obtiene el nombre (SSID) de la red a la que está conectada la interfaz.
+        En Linux, si la interfaz es inalámbrica se utiliza 'iwgetid'.
+        En macOS se usa el comando 'airport' para obtener el SSID.
+        En caso de no ser inalámbrica se retorna el nombre de la interfaz con una indicación.
+        """
+        system = platform.system()
+        if system == "Linux":
+            wireless_path = f"/sys/class/net/{self.interface}/wireless"
+            if os.path.exists(wireless_path):
+                try:
+                    ssid = subprocess.check_output(
+                        ["iwgetid", self.interface, "--raw"],
+                        text=True
+                    ).strip()
+                    if ssid:
+                        return ssid
+                except Exception:
+                    pass
+            return f"{self.interface} (cableado)"
+        elif system == "Darwin":
+            try:
+                airport_output = subprocess.check_output(
+                    ["/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport", "-I"],
+                    text=True
+                )
+                for line in airport_output.splitlines():
+                    if "SSID:" in line:
+                        return line.split("SSID:")[1].strip()
+            except Exception:
+                pass
+            return f"{self.interface} (no wifi)"
+        else:
+            return self.interface
