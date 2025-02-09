@@ -1,41 +1,56 @@
 # NetGuard - Guía de Uso Rápido
-
+  
 NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. Permite escanear, bloquear, desbloquear y limitar el ancho de banda de dispositivos conectados.
-
+  
 ---
-
+  
 ## Requisitos Previos
-
-- **Sistema Operativo**: Linux (preferiblemente distribuciones basadas en Debian/Ubuntu).
-- **Permisos**: Necesitas ejecutar el programa como root o con `sudo`.
-- **Python**: Versión 3.8 o superior.
-
+  
+- **Docker y Docker Compose**: Instalados en tu sistema.
+- **Sistema Operativo**: Cualquier sistema que soporte Docker (Linux, Windows, macOS).
+  
 ---
 
-## Configuración del Entorno Virtual
+## Ejecución con Docker
+
+1. **Construir la imagen y ejecutar el contenedor**:
+   ```bash
+     docker-compose build
+     docker-compose run netguard
+   ```
+
+2. **Reconstruir después de cambios**:
+  Si modificas el código o las dependencias (`requirements.txt`), reconstruye la imagen con:
+  ```bash
+    docker-compose build
+  ```
+  
+---
+  
+## Configuración del Entorno Virtual (Método Alternativo)
 
 1. **Crear el entorno virtual**:
    ```bash
-   python3 -m venv netguard-env
+     python3 -m venv netguard-env
    ```
 
 2. **Activar el entorno virtual**:
    ```bash
-   source netguard-env/bin/activate
+     source netguard-env/bin/activate
    ```
 
 3. **Instalar dependencias**:
    ```bash
-   pip3 install -r requirements.txt
+     pip3 install -r requirements.txt
    ```
-
+  
 ---
 
-## Ejecución del Programa
+## Ejecución del Programa (Método Alternativo)
 
 1. **Iniciar NetGuard**:
    ```bash
-   sudo python3 main.py
+     sudo python3 main.py
    ```
 
 2. **Interfaz Principal**:
@@ -48,7 +63,7 @@ NetGuard es una herramienta CLI para administrar dispositivos en tu red Wi-Fi. P
    - **throttle**: Limitar el ancho de banda de un dispositivo.
    - **refresh**: Volver a escanear la red.
    - **exit**: Salir del programa.
-
+  
 ---
 
 ## Ejemplos de Uso

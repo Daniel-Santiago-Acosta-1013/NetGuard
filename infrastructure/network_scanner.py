@@ -2,9 +2,15 @@ from scapy.all import ARP, Ether, srp
 from rich.progress import Progress
 from core.entities import Device
 from core.use_cases import NetworkUseCases
+import netifaces
 
 class NetworkScanner:
-    def __init__(self, interface="wlan0"):
+    def __init__(self, interface=None):
+        # Si no se especifica interfaz, se detecta la interfaz por defecto a partir de la gateway
+        if interface is None:
+            gateways = netifaces.gateways()
+            default_iface = gateways.get('default', {}).get(netifaces.AF_INET, [None, None])[1]
+            interface = default_iface if default_iface is not None else "eth0"
         self.interface = interface
         self.devices = []
 
@@ -17,7 +23,7 @@ class NetworkScanner:
             
             arp = ARP(pdst=ip_range)
             ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-            packet = ether/arp
+            packet = ether / arp
             
             ans, _ = srp(packet, timeout=timeout, iface=self.interface, verbose=0)
             
@@ -34,7 +40,6 @@ class NetworkScanner:
         return self.devices
 
     def _get_ip_range(self):
-        import netifaces
         gw_ip = netifaces.gateways()['default'][netifaces.AF_INET][0]
         subnet = gw_ip.rsplit('.', 1)[0] + '.0/24'
         return subnet
