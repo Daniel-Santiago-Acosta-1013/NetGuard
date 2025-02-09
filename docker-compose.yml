@@ -1,0 +1,7 @@
+services:
+  netguard:
+    build: .
+    container_name: netguard
+    privileged: true  # Se requieren privilegios para modificar iptables
+    tty: true         # Asigna un pseudo-TTY para la interacción
+    stdin_open: true  # Mantiene STDIN abierto para permitir la entrada interactiva
