@@ -45,13 +45,6 @@ class CLIInterface:
             
         self.console.print(table)
         
-    def get_action(self):
-        return Prompt.ask(
-            "\n[bold]Seleccione una opción:[/bold]",
-            choices=["block", "unblock", "throttle", "refresh", "exit"],
-            show_choices=False
-        )
-        
     def select_device(self, devices):
         ips = [device.ip for device in devices]
         return Prompt.ask("Seleccione una IP", choices=ips)
@@ -61,3 +54,18 @@ class CLIInterface:
     
     def show_message(self, message):
         self.console.print(Panel.fit(f"[yellow]{message}[/yellow]"))
+        
+    def show_main_menu(self):
+        self.console.clear()
+        menu_text = (
+            "[bold green]Escaneo completado![/bold green]\n\n"
+            "[bold]Menú Principal[/bold]\n"
+            "1. Ver dispositivos conectados\n"
+            "2. Bloquear dispositivo\n"
+            "3. Bajar calidad de conexión de un dispositivo\n"
+            "4. Reconectar dispositivo bloqueado\n"
+            "5. Escanear red nuevamente\n"
+            "6. Salir\n"
+        )
+        self.console.print(Panel.fit(menu_text, title="NetGuard"))
+        return Prompt.ask("Selecciona una opción", choices=["1", "2", "3", "4", "5", "6"])
