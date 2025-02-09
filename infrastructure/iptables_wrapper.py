@@ -9,15 +9,30 @@ except ModuleNotFoundError:
     sys.modules["distutils"] = distutils
     sys.modules["distutils.sysconfig"] = sysconfig
 
-import iptc  # type: ignore
+import platform
+
+if platform.system() == "Linux":
+    _IPTC_AVAILABLE = True
+    import iptc  # type: ignore
+else:
+    _IPTC_AVAILABLE = False
+    iptc = None
 
 class Iptables:
     def __init__(self):
-        # Utiliza la tabla FILTER y desactiva el autocommit para acumular cambios
-        self.table = iptc.Table(iptc.Table.FILTER)
-        self.table.autocommit = False
+        if _IPTC_AVAILABLE:
+            # Utiliza la tabla FILTER y desactiva el autocommit para acumular cambios
+            self.table = iptc.Table(iptc.Table.FILTER)
+            self.table.autocommit = False
+        else:
+            self.table = None
+            print("Advertencia: iptables no está disponible en este sistema. Se utilizará un dummy wrapper.")
 
     def append(self, chain_name, *args):
+        if not _IPTC_AVAILABLE:
+            print("Dummy Iptables.append called, no acción realizada (iptables no disponible).")
+            return
+
         chain = iptc.Chain(self.table, chain_name)
         rule = iptc.Rule()
 
@@ -44,6 +59,10 @@ class Iptables:
         chain.append_rule(rule)
 
     def delete(self, chain_name, *args):
+        if not _IPTC_AVAILABLE:
+            print("Dummy Iptables.delete called, no acción realizada (iptables no disponible).")
+            return
+
         chain = iptc.Chain(self.table, chain_name)
         rule = iptc.Rule()
 
@@ -86,5 +105,8 @@ class Iptables:
             chain.delete_rule(rule_to_delete)
 
     def commit(self):
+        if not _IPTC_AVAILABLE:
+            print("Dummy Iptables.commit called, no acción realizada (iptables no disponible).")
+            return
         # Los cambios se aplican al hacer commit en la tabla
         self.table.commit()
