@@ -1,0 +1,53 @@
+from rich.console import Console
+from rich.table import Table
+from rich.prompt import Prompt
+from rich.panel import Panel
+from core.entities import Device
+
+class CLIInterface:
+    def __init__(self):
+        self.console = Console()
+        
+    def show_menu(self):
+        self.console.clear()
+        self.console.print(Panel.fit("[bold green]NetGuard - Administrador de Red[/bold green]"))
+        
+    def display_devices(self, devices: list[Device]):
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("IP", style="cyan")
+        table.add_column("MAC", style="magenta")
+        table.add_column("Fabricante")
+        table.add_column("OS")
+        table.add_column("Estado")
+        table.add_column("Ancho de Banda")
+        
+        for device in devices:
+            status = "[red]Bloqueado" if device.is_blocked else "[green]Activo"
+            bandwidth = f"{device.bandwidth_limit}kbit" if device.bandwidth_limit else "Ilimitado"
+            table.add_row(
+                device.ip,
+                device.mac,
+                device.vendor,
+                device.os,
+                status,
+                bandwidth
+            )
+            
+        self.console.print(table)
+        
+    def get_action(self):
+        return Prompt.ask(
+            "\n[bold]Seleccione una opción:[/bold]",
+            choices=["block", "unblock", "throttle", "refresh", "exit"],
+            show_choices=False
+        )
+        
+    def select_device(self, devices):
+        ips = [device.ip for device in devices]
+        return Prompt.ask("Seleccione una IP", choices=ips)
+    
+    def get_bandwidth_limit(self):
+        return Prompt.ask("Ingrese el límite de ancho de banda (ej: 100kbit)")
+    
+    def show_message(self, message):
+        self.console.print(Panel.fit(f"[yellow]{message}[/yellow]"))

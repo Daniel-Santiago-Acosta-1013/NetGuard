@@ -1,0 +1,4 @@
+rich==13.7.0
+scapy==2.5.0
+python-iptables==1.0.1
+mac-vendor-lookup==0.1.11
