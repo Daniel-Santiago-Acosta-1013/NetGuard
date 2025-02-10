@@ -3,7 +3,6 @@ import sys
 from interface.cli import CLIInterface
 from infrastructure.network_scanner import NetworkScanner
 from infrastructure.device_manager import DeviceManager
-from rich.prompt import Prompt
 
 def check_root():
     if os.geteuid() != 0:
@@ -21,7 +20,7 @@ def main():
     # Obtener y mostrar el nombre de la red conectada (válido para Linux y macOS)
     network_name = scanner.get_network_name()
     cli.show_message(f"Conectado a la red: {network_name}")
-    Prompt.ask("\nPresione Enter para continuar", default="")
+    cli.pause()  # Pausa para continuar
 
     while True:
         option = cli.show_main_menu()
@@ -29,7 +28,7 @@ def main():
         if option == "1":
             # Ver dispositivos conectados
             cli.display_devices(devices)
-            Prompt.ask("\nPresione Enter para continuar", default="")
+            cli.pause()
             
         elif option == "2":
             # Bloquear dispositivo
@@ -43,7 +42,7 @@ def main():
                 cli.show_message(f"Dispositivo {ip} bloqueado")
             else:
                 cli.show_message("Dispositivo no encontrado")
-            Prompt.ask("\nPresione Enter para continuar", default="")
+            cli.pause()
             
         elif option == "3":
             # Bajar calidad de conexión (throttle)
@@ -67,7 +66,7 @@ def main():
                 cli.show_message(f"Ancho de banda limitado a {limit} para {ip}")
             else:
                 cli.show_message("Dispositivo no encontrado")
-            Prompt.ask("\nPresione Enter para continuar", default="")
+            cli.pause()
             
         elif option == "4":
             # Reconectar dispositivo bloqueado (desbloquear)
@@ -81,13 +80,13 @@ def main():
                 cli.show_message(f"Dispositivo {ip} reconectado")
             else:
                 cli.show_message("Dispositivo no encontrado")
-            Prompt.ask("\nPresione Enter para continuar", default="")
+            cli.pause()
             
         elif option == "5":
             # Escanear red nuevamente
             devices = scanner.scan()
             cli.show_message("Escaneo completado!")
-            Prompt.ask("\nPresione Enter para continuar", default="")
+            cli.pause()
             
         elif option == "6":
             break

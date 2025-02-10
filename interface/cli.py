@@ -18,6 +18,27 @@ class CLIInterface:
     def __init__(self):
         self.console = Console()
         
+    def safe_prompt(self, message, choices=None, default=""):
+        import sys
+        if sys.platform == "darwin":
+            # En macOS se utiliza input() para evitar problemas con Prompt de Rich
+            if choices:
+                user_input = input(message + " ")
+                while user_input not in choices:
+                    self.console.print(f"[red]Por favor, ingrese una opción válida: {choices}[/red]")
+                    user_input = input(message + " ")
+                return user_input
+            else:
+                return input(message + " ")
+        else:
+            if choices:
+                return Prompt.ask(message, choices=choices, default=default)
+            else:
+                return Prompt.ask(message, default=default)
+
+    def pause(self):
+        self.safe_prompt("\nPresione Enter para continuar")
+        
     def show_menu(self):
         self.console.clear()
         self.console.print(Panel.fit("[bold green]NetGuard - Administrador de Red[/bold green]"))
@@ -79,14 +100,14 @@ class CLIInterface:
         
         valid_choices = [str(i) for i in range(1, len(devices) + 1)]
         valid_choices.append("0")
-        selection = Prompt.ask("Seleccione el número del dispositivo (0 para volver)", choices=valid_choices)
+        selection = self.safe_prompt("Seleccione el número del dispositivo (0 para volver)", choices=valid_choices)
         if selection == "0":
             return None
         index = int(selection) - 1
         return devices[index].ip
     
     def get_bandwidth_limit(self):
-        return Prompt.ask("Ingrese el límite de ancho de banda (ej: 100kbit)")
+        return self.safe_prompt("Ingrese el límite de ancho de banda (ej: 100kbit)")
     
     def show_message(self, message):
         self.console.print(Panel.fit(f"[yellow]{message}[/yellow]"))
@@ -104,4 +125,4 @@ class CLIInterface:
             "6. Salir\n"
         )
         self.console.print(Panel.fit(menu_text, title="NetGuard"))
-        return Prompt.ask("Selecciona una opción", choices=["1", "2", "3", "4", "5", "6"])
+        return self.safe_prompt("Selecciona una opción", choices=["1", "2", "3", "4", "5", "6"])
