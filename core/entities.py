@@ -8,3 +8,4 @@ class Device:
     os: str = "Unknown"
     is_blocked: bool = False
     bandwidth_limit: int = 0
+    public_ip: str = "N/A"

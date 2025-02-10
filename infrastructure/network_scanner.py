@@ -58,12 +58,22 @@ class NetworkScanner:
             
             ans, _ = srp(packet, timeout=timeout, iface=self.interface, verbose=0)
             
+            # Obtener la IP pública externa una sola vez
+            external_ip = self.get_external_ip()
+            
             for i, (sent, received) in enumerate(ans):
+                device_ip = received.psrc
+                # Si la IP es privada se asigna la IP externa, de lo contrario se usa la misma
+                if ipaddress.ip_address(device_ip).is_private:
+                    public_ip = external_ip
+                else:
+                    public_ip = device_ip
                 device = Device(
-                    ip=received.psrc,
+                    ip=device_ip,
                     mac=received.hwsrc,
                     vendor=NetworkUseCases.get_vendor(received.hwsrc),
-                    os=NetworkUseCases.detect_os(received.psrc)
+                    os=NetworkUseCases.detect_os(device_ip),
+                    public_ip=public_ip
                 )
                 self.devices.append(device)
                 # Actualizar progreso en función de la cantidad de respuestas
@@ -80,6 +90,17 @@ class NetworkScanner:
             return str(network)
         else:
             raise Exception("No se pudo determinar la IP de la interfaz")
+
+    def get_external_ip(self):
+        """
+        Obtiene la IP pública externa utilizando un servicio en línea.
+        """
+        try:
+            import urllib.request
+            with urllib.request.urlopen("https://api.ipify.org") as response:
+                return response.read().decode().strip()
+        except Exception:
+            return "N/A"
 
     def get_network_name(self):
         """

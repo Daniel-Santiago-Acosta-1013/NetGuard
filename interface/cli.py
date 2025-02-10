@@ -3,7 +3,6 @@ import sys
 try:
     from rich.console import Console  # type: ignore
     from rich.table import Table  # type: ignore
-    from rich.prompt import Prompt  # type: ignore
     from rich.panel import Panel  # type: ignore
 except ModuleNotFoundError:
     sys.stderr.write(
@@ -19,23 +18,17 @@ class CLIInterface:
         self.console = Console()
         
     def safe_prompt(self, message, choices=None, default=""):
-        import sys
-        if sys.platform == "darwin":
-            # En macOS se utiliza input() para evitar problemas con Prompt de Rich
-            if choices:
+        # Se usa la función nativa input() para asegurar que se pueda escribir sin bloqueo.
+        if choices:
+            while True:
                 user_input = input(message + " ")
-                while user_input not in choices:
-                    self.console.print(f"[red]Por favor, ingrese una opción válida: {choices}[/red]")
-                    user_input = input(message + " ")
-                return user_input
-            else:
-                return input(message + " ")
+                if user_input in choices:
+                    return user_input
+                else:
+                    print(f"Por favor, ingrese una opción válida: {choices}")
         else:
-            if choices:
-                return Prompt.ask(message, choices=choices, default=default)
-            else:
-                return Prompt.ask(message, default=default)
-
+            return input(message + " ")
+    
     def pause(self):
         self.safe_prompt("\nPresione Enter para continuar")
         
@@ -46,6 +39,7 @@ class CLIInterface:
     def display_devices(self, devices: list[Device]):
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("IP", style="cyan")
+        table.add_column("IP Pública", style="cyan")
         table.add_column("MAC", style="magenta")
         table.add_column("Fabricante")
         table.add_column("OS")
@@ -57,6 +51,7 @@ class CLIInterface:
             bandwidth = f"{device.bandwidth_limit}kbit" if device.bandwidth_limit else "Ilimitado"
             table.add_row(
                 device.ip,
+                device.public_ip,
                 device.mac,
                 device.vendor,
                 device.os,
@@ -78,6 +73,7 @@ class CLIInterface:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Número", style="cyan")
         table.add_column("IP", style="cyan")
+        table.add_column("IP Pública", style="cyan")
         table.add_column("MAC", style="magenta")
         table.add_column("Fabricante")
         table.add_column("OS")
@@ -90,6 +86,7 @@ class CLIInterface:
             table.add_row(
                 str(idx),
                 device.ip,
+                device.public_ip,
                 device.mac,
                 device.vendor,
                 device.os,
