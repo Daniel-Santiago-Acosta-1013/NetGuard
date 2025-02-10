@@ -7,11 +7,12 @@ import ipaddress
 import platform
 import subprocess
 import os
+import re
 
 class NetworkScanner:
     def __init__(self, interface=None):
         if interface is None:
-            # Primero, buscar una interfaz inalámbrica (excluyendo loopback) que tenga dirección IPv4
+            # Buscar una interfaz inalámbrica (excluyendo loopback) con dirección IPv4
             wireless_iface = None
             for iface in netifaces.interfaces():
                 if iface == "lo":
@@ -25,11 +26,11 @@ class NetworkScanner:
             if wireless_iface:
                 interface = wireless_iface
             else:
-                # Si no se encuentra una interfaz inalámbrica, utilizar la interfaz por defecto a partir de la gateway
+                # Si no se encuentra una interfaz inalámbrica, se utiliza la interfaz por defecto a partir de la gateway
                 gateways = netifaces.gateways()
                 default_iface = gateways.get('default', {}).get(netifaces.AF_INET, [None, None])[1]
                 if default_iface is None:
-                    # Fallback: buscar una interfaz no loopback que tenga dirección IPv4
+                    # Fallback: buscar una interfaz no loopback con dirección IPv4
                     for iface in netifaces.interfaces():
                         if iface == "lo":
                             continue
@@ -58,14 +59,11 @@ class NetworkScanner:
             
             ans, _ = srp(packet, timeout=timeout, iface=self.interface, verbose=0)
             
-            # Obtener la IP pública externa una sola vez
-            external_ip = self.get_external_ip()
-            
             for i, (sent, received) in enumerate(ans):
                 device_ip = received.psrc
-                # Si la IP es privada se asigna la IP externa, de lo contrario se usa la misma
+                # Si la IP es privada, no se puede determinar una IP pública individual
                 if ipaddress.ip_address(device_ip).is_private:
-                    public_ip = external_ip
+                    public_ip = "N/A"
                 else:
                     public_ip = device_ip
                 device = Device(
@@ -76,10 +74,29 @@ class NetworkScanner:
                     public_ip=public_ip
                 )
                 self.devices.append(device)
-                # Actualizar progreso en función de la cantidad de respuestas
                 progress.update(task, advance=100 / len(ans) if len(ans) else 100)
         
+        # Actualizar las direcciones MAC consultando la tabla ARP del sistema
+        self.update_mac_addresses()
         return self.devices
+
+    def update_mac_addresses(self):
+        try:
+            arp_output = subprocess.check_output(["arp", "-a"], text=True)
+            # Expresión regular para capturar IP y MAC (compatible con Linux y macOS)
+            pattern = re.compile(r'\(?(\d+\.\d+\.\d+\.\d+)\)?\s+at\s+([0-9a-fA-F:]{17})')
+            ip_to_mac = {}
+            for line in arp_output.splitlines():
+                match = pattern.search(line)
+                if match:
+                    ip = match.group(1)
+                    mac = match.group(2).lower()
+                    ip_to_mac[ip] = mac
+            for device in self.devices:
+                if device.ip in ip_to_mac:
+                    device.mac = ip_to_mac[device.ip]
+        except Exception as e:
+            print("Error al actualizar las MAC addresses:", e)
 
     def _get_ip_range(self):
         addresses = netifaces.ifaddresses(self.interface).get(netifaces.AF_INET)
@@ -94,6 +111,8 @@ class NetworkScanner:
     def get_external_ip(self):
         """
         Obtiene la IP pública externa utilizando un servicio en línea.
+        (No se utiliza en la asignación de IP pública por dispositivo, ya que cada dispositivo
+         debe mostrar su propia IP pública si está asignada, o 'N/A' si está tras NAT.)
         """
         try:
             import urllib.request
@@ -105,9 +124,8 @@ class NetworkScanner:
     def get_network_name(self):
         """
         Obtiene el nombre (SSID) de la red a la que está conectada la interfaz.
-        En Linux, si la interfaz es inalámbrica se utiliza 'iwgetid'.
-        En macOS se usa el comando 'airport' para obtener el SSID.
-        En caso de no ser inalámbrica se retorna el nombre de la interfaz con una indicación.
+        En Linux se utiliza 'iwgetid' si es inalámbrica; en macOS se usa el comando 'airport'.
+        Si no es inalámbrica se retorna el nombre de la interfaz con una indicación.
         """
         system = platform.system()
         if system == "Linux":

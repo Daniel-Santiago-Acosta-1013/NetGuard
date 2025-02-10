@@ -1,6 +1,7 @@
 import os
 import sys
-from interface.cli import CLIInterface
+from PyQt5.QtWidgets import QApplication
+from interface.gui import GUIInterface
 from infrastructure.network_scanner import NetworkScanner
 from infrastructure.device_manager import DeviceManager
 
@@ -11,85 +12,16 @@ def check_root():
 
 def main():
     check_root()
-    cli = CLIInterface()
+    app = QApplication(sys.argv)
     scanner = NetworkScanner()
     manager = DeviceManager()
-    
     # Realizar el primer escaneo de la red
     devices = scanner.scan()
-    # Obtener y mostrar el nombre de la red conectada (válido para Linux y macOS)
+    # Obtener el nombre de la red conectada (válido para Linux y macOS)
     network_name = scanner.get_network_name()
-    cli.show_message(f"Conectado a la red: {network_name}")
-    cli.pause()  # Pausa para continuar
-
-    while True:
-        option = cli.show_main_menu()
-        
-        if option == "1":
-            # Ver dispositivos conectados
-            cli.display_devices(devices)
-            cli.pause()
-            
-        elif option == "2":
-            # Bloquear dispositivo
-            ip = cli.select_device(devices)
-            if ip is None:
-                continue
-            device = next((d for d in devices if d.ip == ip), None)
-            if device:
-                manager.block_device(device.mac)
-                device.is_blocked = True
-                cli.show_message(f"Dispositivo {ip} bloqueado")
-            else:
-                cli.show_message("Dispositivo no encontrado")
-            cli.pause()
-            
-        elif option == "3":
-            # Bajar calidad de conexión (throttle)
-            ip = cli.select_device(devices)
-            if ip is None:
-                continue
-            device = next((d for d in devices if d.ip == ip), None)
-            if device:
-                limit = cli.get_bandwidth_limit()  # Ejemplo: "100kbit"
-                try:
-                    if limit.lower().endswith("kbit"):
-                        numeric_limit = int(limit[:-4])
-                    else:
-                        numeric_limit = int(limit)
-                        limit = f"{numeric_limit}kbit"
-                except ValueError:
-                    numeric_limit = 100
-                    limit = "100kbit"
-                manager.throttle_device(ip, limit)
-                device.bandwidth_limit = numeric_limit
-                cli.show_message(f"Ancho de banda limitado a {limit} para {ip}")
-            else:
-                cli.show_message("Dispositivo no encontrado")
-            cli.pause()
-            
-        elif option == "4":
-            # Reconectar dispositivo bloqueado (desbloquear)
-            ip = cli.select_device(devices)
-            if ip is None:
-                continue
-            device = next((d for d in devices if d.ip == ip), None)
-            if device:
-                manager.unblock_device(device.mac)
-                device.is_blocked = False
-                cli.show_message(f"Dispositivo {ip} reconectado")
-            else:
-                cli.show_message("Dispositivo no encontrado")
-            cli.pause()
-            
-        elif option == "5":
-            # Escanear red nuevamente
-            devices = scanner.scan()
-            cli.show_message("Escaneo completado!")
-            cli.pause()
-            
-        elif option == "6":
-            break
+    gui = GUIInterface(devices, scanner, manager, network_name)
+    gui.show()
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     main()
