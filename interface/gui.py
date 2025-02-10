@@ -153,7 +153,7 @@ class DeviceCard(QFrame):
         self.setStyleSheet(self.cardStyle())
     
     def block_device(self):
-        self.manager.block_device(self.device.mac)
+        self.manager.block_device(self.device.mac, self.device.ip)
         self.device.is_blocked = True
         QMessageBox.information(self, "Información", f"Dispositivo {self.device.ip} bloqueado")
         self.update_card()
@@ -180,7 +180,7 @@ class DeviceCard(QFrame):
         self.update_card()
     
     def reconnect_device(self):
-        self.manager.unblock_device(self.device.mac)
+        self.manager.unblock_device(self.device.mac, self.device.ip)
         self.device.is_blocked = False
         QMessageBox.information(self, "Información", f"Dispositivo {self.device.ip} reconectado")
         self.update_card()
